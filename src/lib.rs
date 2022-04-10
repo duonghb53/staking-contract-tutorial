@@ -1,15 +1,22 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
+use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, AccountId, Balance, BlockHeight, BorshStorageKey, EpochHeight,
-    PanicOnDefault,
+    PanicOnDefault, Promise,
 };
 
 mod account;
 mod config;
+mod enumeration;
+mod internal;
+mod utils;
 use crate::account::*;
 use crate::config::*;
+use crate::enumeration::*;
+use crate::internal::*;
+use crate::utils::*;
 
 #[derive(BorshDeserialize, BorshSerialize, BorshStorageKey)]
 pub enum StorageKey {
@@ -29,6 +36,7 @@ pub struct StakingContract {
     pub last_block_balance_change: BlockHeight,
     pub accounts: LookupMap<AccountId, Account>, // Thong tin chi tiet accout theo AccountId
     pub is_pause: bool,
+    pub pause_is_block: BlockHeight,
 }
 
 #[near_bindgen]
@@ -51,19 +59,52 @@ impl StakingContract {
             last_block_balance_change: 0,
             accounts: LookupMap::new(StorageKey::AccountKey),
             is_pause: false,
+            pause_is_block: 0,
         }
+    }
+
+    #[payable]
+    pub fn storage_deposit(&mut self, account_id: Option<AccountId>) {
+        assert_at_least_one_yocto();
+        let account_id = account_id.unwrap_or_else(|| env::predecessor_account_id());
+        let account_stake = self.accounts.get(&account_id);
+        if account_stake.is_some() {
+            // Refund toan bo token deposit
+            refund_deposit(0);
+        } else {
+            // Tao account moi
+            let before_storage_usage = env::storage_usage();
+            self.internal_register_account(account_id);
+            let after_storage_usage = env::storage_usage();
+            // Refund token deposit con thua
+            refund_deposit(after_storage_usage - before_storage_usage);
+        }
+    }
+
+    pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {
+        let account = self.accounts.get(&account_id);
+        if account.is_some() {
+            U128(1)
+        } else {
+            U128(0)
+        }
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.is_pause
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use near_sdk::test_utils::{accounts, VMContextBuilder};
     use near_sdk::{testing_env, MockedBlockchain};
-    use near_sdk::test_utils::{VMContextBuilder, accounts};
 
     fn get_context(is_view: bool) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
-        builder.current_account_id(accounts(0))
+        builder
+            .current_account_id(accounts(0))
             .signer_account_id(accounts(0))
             .predecessor_account_id(accounts(0))
             .is_view(is_view);
@@ -81,7 +122,8 @@ mod tests {
             reward_denumerator: 100_000,
         };
 
-        let contract = StakingContract::new(accounts(1).to_string(), "ft_contract".to_string(), config);
+        let contract =
+            StakingContract::new(accounts(1).to_string(), "ft_contract".to_string(), config);
 
         assert_eq!(contract.owner_id, accounts(1).to_string());
         assert_eq!(contract.ft_contract_id, "ft_contract".to_string());

@@ -9,9 +9,10 @@ impl StakingContract {
             unstake_balance: 0,
             unstake_start_timestamp: 0,
             unstake_avaiable_epoch: 0,
+            new_account_data: U128(0),
         };
 
-        self.accounts.insert(&account_id, &account);
+        self.accounts.insert(&account_id, &UpgradebleAccount::from(account));
     }
 
     pub(crate) fn internal_calculate_account_reward(&self, account: &Account) -> Balance {

@@ -24,6 +24,21 @@ pub enum StorageKey {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+pub struct StakingContractV1 {
+    pub owner_id: AccountId,
+    pub ft_contract_id: AccountId,
+    pub config: Config, // Cấu hình công thức trả thưởng cho user
+    pub total_stack_balance: Balance,
+    pub total_reward: Balance,
+    pub total_stacker: Balance,
+    pub pre_reward: Balance,
+    pub last_block_balance_change: BlockHeight,
+    pub accounts: LookupMap<AccountId, UpgradebleAccount>, // Thong tin chi tiet accout theo AccountId
+    pub is_pause: bool,
+    pub pause_is_block: BlockHeight,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 #[near_bindgen]
 pub struct StakingContract {
     pub owner_id: AccountId,
@@ -34,9 +49,10 @@ pub struct StakingContract {
     pub total_stacker: Balance,
     pub pre_reward: Balance,
     pub last_block_balance_change: BlockHeight,
-    pub accounts: LookupMap<AccountId, Account>, // Thong tin chi tiet accout theo AccountId
+    pub accounts: LookupMap<AccountId, UpgradebleAccount>, // Thong tin chi tiet accout theo AccountId
     pub is_pause: bool,
     pub pause_is_block: BlockHeight,
+    pub new_data: U128,
 }
 
 #[near_bindgen]
@@ -60,6 +76,7 @@ impl StakingContract {
             accounts: LookupMap::new(StorageKey::AccountKey),
             is_pause: false,
             pause_is_block: 0,
+            new_data: U128(0),
         }
     }
 
@@ -82,6 +99,8 @@ impl StakingContract {
     }
 
     pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {
+
+
         let account = self.accounts.get(&account_id);
         if account.is_some() {
             U128(1)
@@ -92,6 +111,30 @@ impl StakingContract {
 
     pub fn is_paused(&self) -> bool {
         self.is_pause
+    }
+
+    pub fn get_new_data(&self) -> U128 {
+        self.new_data
+    }
+
+    #[private]
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        let contractV1: StakingContractV1 = env::state_read().expect("Can not read state data");
+        StakingContract {
+            owner_id: contractV1.owner_id,
+            ft_contract_id: contractV1.ft_contract_id,
+            config: contractV1.config,
+            total_stack_balance: contractV1.total_stack_balance,
+            total_reward: contractV1.total_reward,
+            total_stacker: contractV1.total_stacker,
+            pre_reward: contractV1.pre_reward,
+            last_block_balance_change: contractV1.last_block_balance_change,
+            accounts: contractV1.accounts,
+            is_pause:contractV1.is_pause,
+            pause_is_block: contractV1.pause_is_block,
+            new_data: U128(10),
+        }
     }
 }
 

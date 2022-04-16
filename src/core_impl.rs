@@ -22,6 +22,7 @@ pub trait FungibleToken {
 #[ext_contract(ext_self)]
 pub trait ExtStackingContract {
     fn ft_transfer_callback(&mut self, amount: U128, account_id: AccountId);
+    fn fn_withdraw_callback(&mut self, account_id: AccountId, old_account: Account);
 }
 
 #[near_bindgen]
@@ -32,7 +33,7 @@ impl FungibleTokenReceiver for StakingContract {
         amount: U128,
         msg: String,
     ) -> PromiseOrValue<U128> {
-        self.internal_deposit_and_stake(sender_id, amount);
+        self.internal_deposit_and_stake(sender_id, amount.0);
         PromiseOrValue::Value(U128(0))
     }
 }
@@ -89,5 +90,50 @@ impl StakingContract {
                 amount
             }
         }
+    }
+
+    #[private]
+    pub fn fn_withdraw_callback(&mut self, account_id: AccountId, old_account: Account) -> U128 {
+        assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULT");
+        match env::promise_result(0) {
+            PromiseResult::NotReady => unreachable!(),
+            PromiseResult::Failed => {
+                // handle rollback account
+                self.accounts
+                    .insert(&account_id, &UpgradebleAccount::from(old_account));
+                U128(0)
+            }
+            PromiseResult::Successful(_value) => U128(old_account.unstake_balance),
+        }
+    }
+
+    #[payable]
+    pub fn unstake(&mut self, amount: U128) {
+        assert_one_yocto();
+        let account_id = env::predecessor_account_id();
+        self.internal_unstake(account_id, amount.0);
+    }
+
+    #[payable]
+    pub fn withdraw(&mut self) -> Promise {
+        assert_one_yocto();
+        let account_id = env::predecessor_account_id();
+        let old_account = self.internal_withdraw(account_id.clone());
+
+        ext_ft_contract::ft_transfer(
+            account_id.clone(),
+            U128(old_account.unstake_balance),
+            Some("Staking contract withdraw".to_string()),
+            &self.ft_contract_id,
+            DEPOSIT_ONE_YOCTO,
+            FT_TRANSFER_GAS,
+        )
+        .then(ext_self::fn_withdraw_callback(
+            account_id.clone(),
+            old_account,
+            &env::current_account_id(),
+            NO_DEPOSIT,
+            FT_HARVEST_CALLBACK_GAS,
+        ))
     }
 }

@@ -44,3 +44,10 @@ near view $CONTRACT_STAKING_ID get_pool_info
 
 # Harvest all reward
 near call $CONTRACT_STAKING_ID harvest --accountId $ACCOUNT_TEST --deposit $ONE_YOCTO --gas $GAS
+
+
+# Unstake
+near call $CONTRACT_STAKING_ID unstake '{"amount": "10000000000000000000000000"}' --accountId $ACCOUNT_TEST --deposit $ONE_YOCTO
+
+# Withdraw
+near call $CONTRACT_STAKING_ID withdraw '' --accountId $ACCOUNT_TEST --deposit $ONE_YOCTO --gas $GAS

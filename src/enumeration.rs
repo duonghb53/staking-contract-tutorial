@@ -31,7 +31,7 @@ impl StakingContract {
 
     pub fn get_pool_info(&self) -> PoolJson {
         PoolJson {
-            total_stake_balance: U128(self.total_stack_balance),
+            total_stake_balance: U128(self.total_stake_balance),
             total_reward: U128(self.pre_reward + self.internal_calculate_global_reward()),
             total_paid_reward_balance: U128(self.total_paid_reward_balance),
             total_stakers: U128(self.total_stacker),

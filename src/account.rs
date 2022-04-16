@@ -8,17 +8,18 @@ pub struct AccountV1 {
     pub last_block_balance_change: BlockHeight,
     pub unstake_balance: Balance,
     pub unstake_start_timestamp: Timestamp,
-    pub unstake_avaiable_epoch: EpochHeight,
+    pub unstake_available_epoch: EpochHeight,
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate="near_sdk::serde")]
 pub struct Account {
     pub stake_balance: Balance,
     pub pre_reward: Balance,
     pub last_block_balance_change: BlockHeight,
     pub unstake_balance: Balance,
     pub unstake_start_timestamp: Timestamp,
-    pub unstake_avaiable_epoch: EpochHeight,
+    pub unstake_available_epoch: EpochHeight,
     pub new_account_data: U128,
 }
 
@@ -45,7 +46,7 @@ impl From<UpgradebleAccount> for Account {
                      last_block_balance_change: account_v1.last_block_balance_change,
                      unstake_balance: account_v1.unstake_balance,
                      unstake_start_timestamp: account_v1.unstake_start_timestamp,
-                     unstake_avaiable_epoch: account_v1.unstake_avaiable_epoch,
+                    unstake_available_epoch: account_v1.unstake_available_epoch,
                      new_account_data: U128(128),
             }
         }
@@ -74,9 +75,9 @@ impl AccountJson {
             unstake_balance: U128(account.unstake_balance),
             unstake_start_timestamp: account.unstake_start_timestamp,
             reward: U128(new_reward),
-            can_withdraw: false,
+            can_withdraw: account.unstake_available_epoch <= env::epoch_height(),
             current_epoch: env::epoch_height(),
-            unstake_avaiable_epoch: account.unstake_avaiable_epoch,
+            unstake_avaiable_epoch: account.unstake_available_epoch,
             new_account_data: account.new_account_data,
         }
     }

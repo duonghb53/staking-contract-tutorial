@@ -7,7 +7,7 @@ Install Rust https://rustup.rs/
 3. Login: `near login`
 
 ## Workflow
-
+![](https://github.com/duonghb53/staking-contract-tutorial/blob/master/res/Staking%20Contract%20Workflow.png)
 
 ## Build
 >./build.sh

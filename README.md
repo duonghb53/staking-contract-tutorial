@@ -18,6 +18,6 @@ Install Rust https://rustup.rs/
 ## Deploy Staking contract
 >./deploy_staking.sh
 
-## Deploy Staking contract
+## Test Contract
 >./run.sh
 

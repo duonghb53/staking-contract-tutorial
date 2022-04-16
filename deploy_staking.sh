@@ -17,8 +17,8 @@ echo "################### CREATE ACCOUNT ###################"
 near create-account $CONTRACT_STAKING_ID --masterAccount $MAIN_ACCOUNT --initialBalance 10
 near create-account $ACCOUNT_TEST --masterAccount $MAIN_ACCOUNT --initialBalance 10
 
-#2. Deploy:
+# 2. Deploy:
 near deploy --wasmFile res/staking-contract.wasm --accountId $CONTRACT_STAKING_ID
 
-# 3 Init contract
+# 3. Init contract
 near call $CONTRACT_STAKING_ID new_default_config '{"owner_id": "'$MAIN_ACCOUNT'", "ft_contract_id": "'$CONTRACT_FT_ID'"}' --accountId $MAIN_ACCOUNT

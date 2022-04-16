@@ -4,19 +4,22 @@ use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, AccountId, Balance, BlockHeight, BorshStorageKey, EpochHeight,
-    PanicOnDefault, Promise,
+    PanicOnDefault, Promise, PromiseOrValue
 };
+use near_sdk::log;
 
 mod account;
 mod config;
 mod enumeration;
 mod internal;
 mod utils;
+mod core_impl;
 use crate::account::*;
 use crate::config::*;
 use crate::enumeration::*;
 use crate::internal::*;
 use crate::utils::*;
+use crate::core_impl::*;
 
 #[derive(BorshDeserialize, BorshSerialize, BorshStorageKey)]
 pub enum StorageKey {
@@ -29,7 +32,7 @@ pub struct StakingContractV1 {
     pub ft_contract_id: AccountId,
     pub config: Config, // Cấu hình công thức trả thưởng cho user
     pub total_stack_balance: Balance,
-    pub total_reward: Balance,
+    pub total_paid_reward_balance: Balance,
     pub total_stacker: Balance,
     pub pre_reward: Balance,
     pub last_block_balance_change: BlockHeight,
@@ -45,7 +48,7 @@ pub struct StakingContract {
     pub ft_contract_id: AccountId,
     pub config: Config, // Cấu hình công thức trả thưởng cho user
     pub total_stack_balance: Balance,
-    pub total_reward: Balance,
+    pub total_paid_reward_balance: Balance,
     pub total_stacker: Balance,
     pub pre_reward: Balance,
     pub last_block_balance_change: BlockHeight,
@@ -69,7 +72,7 @@ impl StakingContract {
             ft_contract_id,
             config,
             total_stack_balance: 0,
-            total_reward: 0,
+            total_paid_reward_balance: 0,
             total_stacker: 0,
             pre_reward: 0,
             last_block_balance_change: 0,
@@ -126,7 +129,7 @@ impl StakingContract {
             ft_contract_id: contractV1.ft_contract_id,
             config: contractV1.config,
             total_stack_balance: contractV1.total_stack_balance,
-            total_reward: contractV1.total_reward,
+            total_paid_reward_balance: contractV1.total_paid_reward_balance,
             total_stacker: contractV1.total_stacker,
             pre_reward: contractV1.pre_reward,
             last_block_balance_change: contractV1.last_block_balance_change,

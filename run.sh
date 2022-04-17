@@ -19,8 +19,8 @@ near call $CONTRACT_STAKING_ID storage_deposit '{"account_id": "'$ACCOUNT_TEST'"
 near call $CONTRACT_STAKING_ID storage_deposit '{"account_id": "'$MAIN_ACCOUNT'"}' --accountId $MAIN_ACCOUNT --deposit 0.01
 
 # 3. Deposit ft token to account
-near call $CONTRACT_FT_ID ft_transfer '{"receiver_id": "'$ACCOUNT_TEST'", "amount": "'$AMOUNT'"}' --accountId $MAIN_ACCOUNT --amount 0.000000000000000000000001
-near call $CONTRACT_FT_ID ft_transfer '{"receiver_id": "'$MAIN_ACCOUNT'", "amount": "'$AMOUNT'"}' --accountId $ACCOUNT_TEST --amount 0.000000000000000000000001
+near call $CONTRACT_FT_ID ft_transfer '{"receiver_id": "'$ACCOUNT_TEST'", "amount": "'$AMOUNT'"}' --accountId $MAIN_ACCOUNT --deposit $ONE_YOCTO
+near call $CONTRACT_FT_ID ft_transfer '{"receiver_id": "'$MAIN_ACCOUNT'", "amount": "'$AMOUNT'"}' --accountId $ACCOUNT_TEST --deposit $ONE_YOCTO
 # ??? Tại sao accountId lúc gọi không phải là $CONTRACT_FT_ID vẫn có thể transfer được token vào $ACCOUNT_TEST? Vậy ai cũng có thể transfer token được à?
 # Vì đang dùng cho testnet đúng không?
 

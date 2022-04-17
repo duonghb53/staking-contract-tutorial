@@ -13,12 +13,9 @@ Install Rust https://rustup.rs/
 ## Build
 >./build.sh
 
-## Deploy FT contract
->./deploy_ft.sh
+## Run FT contract
+>./ft_contract.sh
 
-## Deploy Staking contract
->./deploy_staking.sh
-
-## Test Contract
->./run.sh
+## Run Staking contract
+>./staking_contract.sh
 
